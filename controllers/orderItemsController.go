@@ -41,8 +41,6 @@ func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
 	projectStage := bson.D{
 		{"$project", bson.D{
 			{"id", 0},
-			{"amount", "$product.price"},
-			{"total_count", 1},
 			{"product_name", "$product.name"},
 			{"description", "$product.description"},
 			{"table_number", "$table.table_number"},
@@ -52,13 +50,11 @@ func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
 			{"quantity", 1},
 		}}}
 
-	groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"order_id", "$order_id"}, {"table_id", "$table_id"}, {"table_number", "$table_number"}}}, {"payment_due", bson.D{{"$sum", "$amount"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"order_items", bson.D{{"$push", "$$ROOT"}}}}}}
+	groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"order_id", "$order_id"}, {"table_id", "$table_id"}, {"table_number", "$table_number"}}}, {"order_items", bson.D{{"$push", "$$ROOT"}}}}}}
 
 	projectStage2 := bson.D{
 		{"$project", bson.D{
 			{"id", 0},
-			{"payment_due", 1},
-			{"total_count", 1},
 			{"table_number", "$_id.table_number"},
 			{"order_items", 1},
 		}}}
