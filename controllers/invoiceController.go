@@ -19,7 +19,7 @@ type InvoiceViewFormat struct {
 	Invoice_id     string
 	Order_id       string
 	Payment_method string
-	Table_number   interface{}
+	Membership_id  interface{}
 	Order_details  interface{}
 }
 
@@ -63,7 +63,7 @@ func GetInvoice() gin.HandlerFunc {
 		invoiceView.Invoice_id = invoice.Invoice_id
 		invoiceView.Order_id = invoice.Order_id
 		invoiceView.Payment_method = invoice.Payment_method
-		invoiceView.Table_number = ""  // allOrderItems[0]["table_number"]
+		invoiceView.Membership_id = "" // allOrderItems[0]["membership_id"]
 		invoiceView.Order_details = "" // allOrderItems[0]["order_items"]
 
 		// All good so return the struct

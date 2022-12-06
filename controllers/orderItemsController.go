@@ -16,8 +16,8 @@ import (
 )
 
 type OrderItemPack struct {
-	Table_id    *string
-	Order_items []models.OrderItem
+	Membership_id *string
+	Order_items   []models.OrderItem
 }
 
 var orderItemCollection *mongo.Collection = database.OpenCollection(database.Client, "orderItem")
@@ -35,27 +35,26 @@ func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
 	lookupOrderStage := bson.D{{"$lookup", bson.D{{"from", "order"}, {"localField", "order_id"}, {"foreignField", "order_id"}, {"as", "order"}}}}
 	unwindOrderStage := bson.D{{"$unwind", bson.D{{"path", "$order"}, {"preserveNullAndEmptyArrays", true}}}}
 
-	lookupTableStage := bson.D{{"$lookup", bson.D{{"from", "table"}, {"localField", "order.table_id"}, {"foreignField", "table_id"}, {"as", "table"}}}}
-	unwindTableStage := bson.D{{"$unwind", bson.D{{"path", "$table"}, {"preserveNullAndEmptyArrays", true}}}}
+	lookupTableStage := bson.D{{"$lookup", bson.D{{"from", "membership"}, {"localField", "order.membership_id"}, {"foreignField", "membership_id"}, {"as", "membership"}}}}
+	unwindTableStage := bson.D{{"$unwind", bson.D{{"path", "$membership"}, {"preserveNullAndEmptyArrays", true}}}}
 
 	projectStage := bson.D{
 		{"$project", bson.D{
 			{"id", 0},
 			{"product_name", "$product.name"},
 			{"description", "$product.description"},
-			{"table_number", "$table.table_number"},
-			{"table_id", "$table.table_id"},
+			{"membership_id", "$membership.membership_id"},
 			{"order_id", "$order.order_id"},
 			{"price", "$product.price"},
 			{"quantity", 1},
 		}}}
 
-	groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"order_id", "$order_id"}, {"table_id", "$table_id"}, {"table_number", "$table_number"}}}, {"order_items", bson.D{{"$push", "$$ROOT"}}}}}}
+	groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"order_id", "$order_id"}, {"membership_id", "$_id"}}}, {"order_items", bson.D{{"$push", "$$ROOT"}}}}}}
 
 	projectStage2 := bson.D{
 		{"$project", bson.D{
 			{"id", 0},
-			{"table_number", "$_id.table_number"},
+			{"membership_id", "$_id.membership_id"},
 			{"order_items", 1},
 		}}}
 
@@ -146,7 +145,7 @@ func CreateOrderItem() gin.HandlerFunc {
 
 		// Finish creating the order object
 		order_id := OrderItemOrderCreator(order) // Create a new order for this order item
-		order.Table_id = orderItemPack.Table_id
+		order.Membership_id = orderItemPack.Membership_id
 		order.Order_Date, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		orderItemsToBeInserted := []interface{}{}
 

@@ -54,7 +54,7 @@ func GetOrder() gin.HandlerFunc {
 func CreateOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var table models.Table
+		var membership models.Membership
 		var order models.Order
 
 		// BindJSON reads the body buffer (JSON from Postman) to deserialize it into a Golang struct
@@ -64,7 +64,7 @@ func CreateOrder() gin.HandlerFunc {
 			return
 		}
 
-		// Handle validation (validate the data based on our invoice struct)
+		// Handle validation (validate the data based on our order struct)
 		validationErr := validate.Struct(order)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
@@ -76,11 +76,11 @@ func CreateOrder() gin.HandlerFunc {
 		order.Order_id = order.ID.Hex()
 		order.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		order.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-		if order.Table_id != nil {
-			err := tableCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
+		if order.Membership_id != nil {
+			err := membershipCollection.FindOne(ctx, bson.M{"membership_id": order.Membership_id}).Decode(&membership)
 			defer cancel()
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this table."})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this membership."})
 				return
 			}
 		}
@@ -99,7 +99,7 @@ func CreateOrder() gin.HandlerFunc {
 func UpdateOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var table models.Table
+		var membership models.Membership
 		var order models.Order
 		orderId := c.Param("order_id")
 
@@ -112,14 +112,14 @@ func UpdateOrder() gin.HandlerFunc {
 
 		// Create an update object and append all necessary details to it
 		var updateObj primitive.D
-		if order.Table_id != nil {
-			err := tableCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
+		if order.Membership_id != nil {
+			err := membershipCollection.FindOne(ctx, bson.M{"membership_id": order.Membership_id}).Decode(&membership)
 			defer cancel()
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this table."})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this membership."})
 				return
 			}
-			updateObj = append(updateObj, bson.E{"table_id", order.Table_id})
+			updateObj = append(updateObj, bson.E{"membership_id", order.Membership_id})
 		}
 
 		// Set update object's 'Updated_at' field
@@ -137,7 +137,7 @@ func UpdateOrder() gin.HandlerFunc {
 			ctx,
 			filter,
 			bson.D{
-				{"$st", updateObj},
+				{"$set", updateObj},
 			},
 			&opt,
 		)
