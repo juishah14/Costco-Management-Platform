@@ -29,8 +29,8 @@ func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
 	// Use Mongo DB aggregation and pipeline operators to get all order items belonging to a certain order
 
 	matchStage := bson.D{{"$match", bson.D{{"order_id", id}}}}
-	lookupStage := bson.D{{"$lookup", bson.D{{"from", "food"}, {"localField", "food_id"}, {"foreignField", "food_id"}, {"as", "food"}}}}
-	unwindStage := bson.D{{"$unwind", bson.D{{"path", "$food"}, {"preserveNullAndEmptyArrays", true}}}}
+	lookupStage := bson.D{{"$lookup", bson.D{{"from", "product"}, {"localField", "product_id"}, {"foreignField", "product_id"}, {"as", "product"}}}}
+	unwindStage := bson.D{{"$unwind", bson.D{{"path", "$product"}, {"preserveNullAndEmptyArrays", true}}}}
 
 	lookupOrderStage := bson.D{{"$lookup", bson.D{{"from", "order"}, {"localField", "order_id"}, {"foreignField", "order_id"}, {"as", "order"}}}}
 	unwindOrderStage := bson.D{{"$unwind", bson.D{{"path", "$order"}, {"preserveNullAndEmptyArrays", true}}}}
@@ -41,14 +41,14 @@ func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
 	projectStage := bson.D{
 		{"$project", bson.D{
 			{"id", 0},
-			{"amount", "$food.price"},
+			{"amount", "$product.price"},
 			{"total_count", 1},
-			{"food_name", "$food.name"},
-			{"food_image", "$food.food_image"},
+			{"product_name", "$product.name"},
+			{"description", "$product.description"},
 			{"table_number", "$table.table_number"},
 			{"table_id", "$table.table_id"},
 			{"order_id", "$order.order_id"},
-			{"price", "$food.price"},
+			{"price", "$product.price"},
 			{"quantity", 1},
 		}}}
 
@@ -201,8 +201,8 @@ func UpdateOrderItem() gin.HandlerFunc {
 			updateObj = append(updateObj, bson.E{"quantity", *orderItem.Quantity})
 		}
 
-		if orderItem.Food_id != nil {
-			updateObj = append(updateObj, bson.E{"food_id", *orderItem.Food_id})
+		if orderItem.Product_id != nil {
+			updateObj = append(updateObj, bson.E{"product_id", *orderItem.Product_id})
 		}
 
 		// Set update object's 'Updated_at' field

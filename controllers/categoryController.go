@@ -29,7 +29,8 @@ func GetCategories() gin.HandlerFunc {
 		}
 
 		var allCategories []bson.M
-		if err = result.All(ctx, &allCategories); err != nil {
+		err = result.All(ctx, &allCategories)
+		if err != nil {
 			log.Fatal(err)
 		}
 		c.JSON(http.StatusOK, allCategories)

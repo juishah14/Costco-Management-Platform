@@ -104,7 +104,7 @@ func CreateInvoice() gin.HandlerFunc {
 			return
 		}
 
-		// Finish creating the food object
+		// Finish creating the invoice object
 		status := "PENDING"
 		if invoice.Payment_status == nil {
 			invoice.Payment_status = &status

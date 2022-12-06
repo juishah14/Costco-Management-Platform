@@ -6,13 +6,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Food struct {
+// used to be food
+
+type Product struct {
 	ID          primitive.ObjectID `bson:"_id"`
 	Name        *string            `json:"name" validate:"required,min=2,max=100"`
 	Price       *float64           `json:"price" validate:"required"`
-	Food_image  *string            `json:"food_image" validate:"required"`
+	Description *string            `json:"description" validate:"required"` // instead of food_image
 	Created_at  time.Time          `json:"created_at"`
 	Updated_at  time.Time          `json:"updated_at"`
-	Food_id     string             `json:"food_id"`
-	Category_id *string            `json:"category_id" validate:"required"` // used to be menu_id
+	Product_id  string             `json:"product_id"`
+	Category    *string            `json:"category" validate:"required"` // used to be menu_id, category name instead of id
 }
