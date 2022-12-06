@@ -86,7 +86,7 @@ func GetFood() gin.HandlerFunc {
 func CreateFood() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var menu models.Menu
+		var category models.Category
 		var food models.Food
 
 		// BindJSON reads the body buffer (JSON from Postman) to deserialize it into a Golang struct
@@ -103,11 +103,11 @@ func CreateFood() gin.HandlerFunc {
 			return
 		}
 
-		// Check if a menu with that menu_id already exists
-		err = menuCollection.FindOne(ctx, bson.M{"menu_id": food.Menu_id}).Decode(&menu)
+		// Check if a category with that category_id already exists
+		err = categoryCollection.FindOne(ctx, bson.M{"category_id": food.Category_id}).Decode(&category)
 		defer cancel()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this menu."})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this category."})
 			return
 		}
 
@@ -142,7 +142,7 @@ func toFixed(num float64, precision int) float64 {
 func UpdateFood() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		var menu models.Menu
+		var category models.Category
 		var food models.Food
 
 		foodId := c.Param("food_id")
@@ -169,14 +169,14 @@ func UpdateFood() gin.HandlerFunc {
 			updateObj = append(updateObj, bson.E{"food_image", food.Food_image})
 		}
 
-		if food.Menu_id != nil {
-			err := menuCollection.FindOne(ctx, bson.M{"menu_id": food.Menu_id}).Decode(&menu)
+		if food.Category_id != nil {
+			err := categoryCollection.FindOne(ctx, bson.M{"category_id": food.Category_id}).Decode(&category)
 			defer cancel()
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this menu."})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this category."})
 				return
 			}
-			updateObj = append(updateObj, bson.E{"menu", food.Price})
+			updateObj = append(updateObj, bson.E{"category_id", food.Category_id})
 		}
 
 		// Set update object's 'Updated_at' field

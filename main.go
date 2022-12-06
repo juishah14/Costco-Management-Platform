@@ -34,7 +34,7 @@ func main() {
 
 	routes.UserRoutes(router)
 	routes.FoodRoutes(router)
-	routes.MenuRoutes(router)
+	routes.CategoryRoutes(router)
 	routes.TableRoutes(router)
 	routes.OrderRoutes(router)
 	routes.OrderItemRoutes(router)

@@ -113,13 +113,13 @@ func UpdateOrder() gin.HandlerFunc {
 		// Create an update object and append all necessary details to it
 		var updateObj primitive.D
 		if order.Table_id != nil {
-			err := menuCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
+			err := tableCollection.FindOne(ctx, bson.M{"table_id": order.Table_id}).Decode(&table)
 			defer cancel()
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this menu."})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, could not find this table."})
 				return
 			}
-			updateObj = append(updateObj, bson.E{"menu", order.Table_id})
+			updateObj = append(updateObj, bson.E{"table_id", order.Table_id})
 		}
 
 		// Set update object's 'Updated_at' field
