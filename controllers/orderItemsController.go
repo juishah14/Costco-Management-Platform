@@ -1,5 +1,7 @@
 package controller
 
+// GET RID OF THE ORDER ITEM PACK, just have this be regular
+
 import (
 	"Golang-Management-Platform/database"
 	"Golang-Management-Platform/models"
@@ -22,64 +24,21 @@ type OrderItemPack struct {
 
 var orderItemCollection *mongo.Collection = database.OpenCollection(database.Client, "orderItem")
 
+// Will implement this func later
 func ItemsByOrder(id string) (OrderItems []primitive.M, err error) {
-
-	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
-	// Use Mongo DB aggregation and pipeline operators to get all order items belonging to a certain order
-
-	matchStage := bson.D{{"$match", bson.D{{"order_id", id}}}}
-	lookupStage := bson.D{{"$lookup", bson.D{{"from", "product"}, {"localField", "product_id"}, {"foreignField", "product_id"}, {"as", "product"}}}}
-	unwindStage := bson.D{{"$unwind", bson.D{{"path", "$product"}, {"preserveNullAndEmptyArrays", true}}}}
-
-	lookupOrderStage := bson.D{{"$lookup", bson.D{{"from", "order"}, {"localField", "order_id"}, {"foreignField", "order_id"}, {"as", "order"}}}}
-	unwindOrderStage := bson.D{{"$unwind", bson.D{{"path", "$order"}, {"preserveNullAndEmptyArrays", true}}}}
-
-	lookupTableStage := bson.D{{"$lookup", bson.D{{"from", "membership"}, {"localField", "order.membership_id"}, {"foreignField", "membership_id"}, {"as", "membership"}}}}
-	unwindTableStage := bson.D{{"$unwind", bson.D{{"path", "$membership"}, {"preserveNullAndEmptyArrays", true}}}}
-
-	projectStage := bson.D{
-		{"$project", bson.D{
-			{"id", 0},
-			{"product_name", "$product.name"},
-			{"description", "$product.description"},
-			{"membership_id", "$membership.membership_id"},
-			{"order_id", "$order.order_id"},
-			{"price", "$product.price"},
-			{"quantity", 1},
-		}}}
-
-	groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"order_id", "$order_id"}, {"membership_id", "$_id"}}}, {"order_items", bson.D{{"$push", "$$ROOT"}}}}}}
-
-	projectStage2 := bson.D{
-		{"$project", bson.D{
-			{"id", 0},
-			{"membership_id", "$_id.membership_id"},
-			{"order_items", 1},
-		}}}
-
-	result, err := orderItemCollection.Aggregate(ctx, mongo.Pipeline{
-		matchStage,
-		lookupStage,
-		unwindStage,
-		lookupOrderStage,
-		unwindOrderStage,
-		lookupTableStage,
-		unwindTableStage,
-		projectStage,
-		groupStage,
-		projectStage2})
-
-	if err != nil {
-		panic(err)
-	}
-
-	if err = result.All(ctx, &OrderItems); err != nil {
-		panic(err)
-	}
-
-	defer cancel()
 	return OrderItems, err
+}
+
+func GetOrderItemsByOrder() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		orderId := c.Param("order_id")
+		allOrderItems, err := ItemsByOrder(orderId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occured while listing order items by their order ID."})
+			return
+		}
+		c.JSON(http.StatusOK, allOrderItems)
+	}
 }
 
 func GetOrderItems() gin.HandlerFunc {
@@ -108,25 +67,13 @@ func GetOrderItem() gin.HandlerFunc {
 		var orderItem models.OrderItem
 		orderItemId := c.Param("order_item_id")
 
-		err := orderItemCollection.FindOne(ctx, bson.M{"orderItem_id": orderItemId}).Decode(&orderItem)
+		err := orderItemCollection.FindOne(ctx, bson.M{"order_item_id": orderItemId}).Decode(&orderItem)
 		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occured while listing this order item."})
 			return
 		}
 		c.JSON(http.StatusOK, orderItem)
-	}
-}
-
-func GetOrderItemsByOrder() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		orderId := c.Param("order_id")
-		allOrderItems, err := ItemsByOrder(orderId)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occured while listing order items by their order ID."})
-			return
-		}
-		c.JSON(http.StatusOK, allOrderItems)
 	}
 }
 
@@ -155,8 +102,6 @@ func CreateOrderItem() gin.HandlerFunc {
 			orderItem.Order_id = order_id
 			orderItem.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 			orderItem.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-			var num = toFixed(*orderItem.Unit_price, 2)
-			orderItem.Unit_price = &num
 
 			// Handle validation (validate the data based on our orderItem struct)
 			validationErr := validate.Struct(orderItem)
@@ -188,16 +133,16 @@ func UpdateOrderItem() gin.HandlerFunc {
 		// Create an update object and append all necessary details to it
 		var updateObj primitive.D
 
-		if orderItem.Unit_price != nil {
-			updateObj = append(updateObj, bson.E{"unit_price", *&orderItem.Unit_price})
-		}
-
 		if orderItem.Quantity != nil {
 			updateObj = append(updateObj, bson.E{"quantity", *orderItem.Quantity})
 		}
 
 		if orderItem.Product_id != nil {
 			updateObj = append(updateObj, bson.E{"product_id", *orderItem.Product_id})
+		}
+
+		if orderItem.Order_id != "" {
+			updateObj = append(updateObj, bson.E{"order_id", orderItem.Order_id})
 		}
 
 		// Set update object's 'Updated_at' field
@@ -221,7 +166,7 @@ func UpdateOrderItem() gin.HandlerFunc {
 		)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, failed to create this order item."})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error, failed to update this order item."})
 			return
 		}
 		defer cancel()

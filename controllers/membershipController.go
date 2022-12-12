@@ -132,3 +132,20 @@ func UpdateMembership() gin.HandlerFunc {
 		c.JSON(http.StatusOK, result)
 	}
 }
+
+func AccountMembershipCreator(membership models.Membership) string {
+
+	// Create a new membership for a new account
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	membership.ID = primitive.NewObjectID()
+	membership.Membership_id = membership.ID.Hex()
+	membership.Created_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	membership.Updated_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+
+	// Insert the membership into our membership collection
+	membershipCollection.InsertOne(ctx, membership)
+	defer cancel()
+
+	// Return the new membership's membership_id
+	return membership.Membership_id
+}

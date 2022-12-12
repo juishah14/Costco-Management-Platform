@@ -36,6 +36,7 @@ func main() {
 	routes.ProductRoutes(router)
 	routes.CategoryRoutes(router)
 	routes.MembershipRoutes(router)
+	routes.AccountRoutes(router)
 	routes.OrderRoutes(router)
 	routes.OrderItemRoutes(router)
 	routes.InvoiceRoutes(router)
