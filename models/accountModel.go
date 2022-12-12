@@ -6,11 +6,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Note struct {
+// will be similar to order item
+// so create a user and then an account
+
+type Account struct {
 	ID         primitive.ObjectID `bson:"_id"`
-	Text       string             `json:"text"`
-	Title      string             `json:"title"`
 	Created_at time.Time          `json:"created_at"`
 	Updated_at time.Time          `json:"updated_at"`
-	Note_id    string             `json:"note_id"`
+	User_id    string             `json:"user_id" validate:"required"` // like food_id
+	Account_id string             `json:"account_id"`
 }

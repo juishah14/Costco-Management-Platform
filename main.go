@@ -33,9 +33,10 @@ func main() {
 	router.Use(middleware.Authentication())
 
 	routes.UserRoutes(router)
-	routes.FoodRoutes(router)
-	routes.MenuRoutes(router)
-	routes.TableRoutes(router)
+	routes.ProductRoutes(router)
+	routes.CategoryRoutes(router)
+	routes.MembershipRoutes(router)
+	routes.AccountRoutes(router)
 	routes.OrderRoutes(router)
 	routes.OrderItemRoutes(router)
 	routes.InvoiceRoutes(router)
