@@ -1,6 +1,6 @@
 # Costco Management Platform
 
-### Tools: MongoDB, Golang (Gin Gonic and JWT Auth)
+### Tools: Golang (Gin Gonic and JWT Auth) & MongoDB
 
 This backend for a Costco Management Platform was designed using Golang and Mongo DB. It features user authentication using JWT, database access using Mongo DB, and handles HTTP requests, route management, and JSON validation using Gin Gonic.
 
